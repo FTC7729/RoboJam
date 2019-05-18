@@ -19,8 +19,9 @@ public class HardwareMap implements Iterable<HardwareDevice> {
 	
 	protected Map<String, List<HardwareDevice>> allDevicesMap	= new HashMap<String, List<HardwareDevice>>();
 	protected List<HardwareDevice>              allDevicesList  = null;
+	protected Map<HardwareDevice, Set<String>>	deviceNames		= new HashMap<HardwareDevice, Set<String>>();
 	protected Map<SerialNumber, HardwareDevice> serialNumberMap = new HashMap<SerialNumber, HardwareDevice>();
-		
+
 	public final List<DeviceMapping<? extends HardwareDevice>> allDeviceMappings;
 	
 	protected final Object lock = new Object();
@@ -33,6 +34,7 @@ public class HardwareMap implements Iterable<HardwareDevice> {
 		this.allDeviceMappings.add(this.crservo);	
 	}
 	
+	// HardwareMap::remove
 	public boolean remove(SerialNumber serialNumber, String deviceName, HardwareDevice device) {
 		synchronized(lock){
 			deviceName =deviceName.trim();
@@ -53,10 +55,12 @@ public class HardwareMap implements Iterable<HardwareDevice> {
 		}
 	}
 	
+	// HardwareMap::put
 	public void put(String deviceName, HardwareDevice device) {
 		internalPut(null, deviceName, device);
 	} // put
 	
+	// HardwareMap::internalPut
 	protected void internalPut(SerialNumber serialNumber, String deviceName, HardwareDevice device) {
 		synchronized (lock) {
 			deviceName = deviceName.trim();
@@ -72,12 +76,13 @@ public class HardwareMap implements Iterable<HardwareDevice> {
 			if (serialNumber != null) {
 				serialNumberMap.put(serialNumber, device);
 			}
-			// rebuildDeviceNamesIfNecessary();
-			// recordDeviceName(deviceName, device);
+			rebuildDeviceNamesIfNecessary();
+			recordDeviceName(deviceName, device);
 			
 		} // sync lock
 	} //internalPut
 	
+	// HardwareMap::buildAllDevicesList
 	private void buildAllDevicesList() {
 		if (allDevicesList == null) {
 			Set<HardwareDevice> set = new HashSet<HardwareDevice>();
@@ -86,8 +91,17 @@ public class HardwareMap implements Iterable<HardwareDevice> {
 			}
 			allDevicesList = new ArrayList<HardwareDevice>(set);
 		}	
-	}
+	} // buildAllDevicesList
 	
+	// HardwareMap::size
+	public int size() {
+		synchronized (lock) {
+			buildAllDevicesList();
+			return allDevicesList.size();
+		}
+	} // size
+	
+	// HardwareMap::Iterator
 	@Override
 	public @NonNull Iterator<HardwareDevice> iterator() {
 		synchronized (lock) {
@@ -95,6 +109,35 @@ public class HardwareMap implements Iterable<HardwareDevice> {
 			return new ArrayList<>(allDevicesList).iterator(); // make copy for locking reasons
 		}
 	} // iterator
+	
+	// HardwareMap::recordDeviceName
+	protected void recordDeviceName(String deviceName,HardwareDevice device) {
+		deviceName = deviceName.trim();
+		Set<String> names = this.deviceNames.get(device);
+		if(names==null){
+			names=new HashSet<String>();
+			this.deviceNames.put(device,names);
+		}
+		names.add(deviceName);
+	} // recordDeviceName
+	
+	// HardwareMap::rebuildDeviceNamesIfNecessary
+	protected void rebuildDeviceNamesIfNecessary(){
+		if (this.deviceNames == null){
+			this.deviceNames = new ConcurrentHashMap<HardwareDevice, Set<String>>();
+			for(Map.Entry<String, List<HardwareDevice>> pair:allDevicesMap.entrySet()){
+				for(HardwareDevice device:pair.getValue()){
+					recordDeviceName(pair.getKey(),device);
+				}
+			}
+		}
+	} // rebuildDeviceNamesIfNecessary
+	
+	
+
+/******************************************************************************
+ *  Begin sub-class implementations
+ *****************************************************************************/
 
 	/*  A  DeviceMapping  contains  a  subcollection  of  the  devices  registered  in  a  {@link  HardwareMap}
 	 *  comprised  of  all  the  devices  of  a  particular  device  type
@@ -109,26 +152,39 @@ public class HardwareMap implements Iterable<HardwareDevice> {
 	        private  Class<DEVICE_TYPE>  deviceTypeClass;
 	        // protected final Object lock = new Object();
 
+	        // DeviceMapping::DeviceMapping
 	        public  DeviceMapping(Class<DEVICE_TYPE>  deviceTypeClass)  {
 	            this.deviceTypeClass  =  deviceTypeClass;
 	        }
 
+	        // DeviceMapping::getDeviceTypeClass
 	        //**  Returns  the  runtime  device  type  for  this  mapping  * 
 	        public  Class<DEVICE_TYPE>  getDeviceTypeClass()  {
 	            return  this.deviceTypeClass;
 	        }
 
+	        // DeviceMapping::cast
 	        //**  A  small  utility  that  assists  in  keeping  the  Java  generics  type  system  happy  * 
 	        public  DEVICE_TYPE  cast(Object  obj)  {
 	            return  this.deviceTypeClass.cast(obj);
 	        }
 
+	        // DeviceMapping::get
 	        public  DEVICE_TYPE  get(String  deviceName)  {
+	        	
+	        	System.out.println(" ## IM GONNA RUN THE DEVICE_TYPE FUNCTION! " + deviceName);
+	        	
 	            synchronized  (lock)  {
 	                deviceName  =  deviceName.trim();
 	                DEVICE_TYPE  device  =  map.get(deviceName);
+	                
+	                System.out.println(" ## map.get.deviceName " + map.get(deviceName));
+	                System.out.println(" ## device "+ device );
+	           
+	                System.out.println(" ## device name gets trimmed " + deviceName);
+	                
 	                if  (device  ==  null)  {
-	                    String  msg  =  String.format("Unable  to  find  a  hardware  device  with  the  name  \"%s\"",  deviceName);
+	                    String  msg  =  String.format(" !! Unable  to  find  a  hardware  device  with  the  name  \"%s\"",  deviceName);
 	                    throw  new  IllegalArgumentException(msg);
 	                }
 	                return  device;
@@ -136,6 +192,7 @@ public class HardwareMap implements Iterable<HardwareDevice> {
 	        }
 
 	         /**
+	          * // DeviceMapping::put
 	          *  Registers  a  new  device  in  this  DeviceMapping  under  the  indicated  name.  Any  existing  device
 	          *  with  this  name  in  this  DeviceMapping  is  removed.  The  new  device  is  also  added  to  the
 	          *  overall  collection  in  the  overall  map  itself.  Note  that  this  method  is  normally  called
@@ -150,6 +207,7 @@ public class HardwareMap implements Iterable<HardwareDevice> {
 	        }
 
 	         /**
+	          * // DeviceMapping::put
 	          *  (Advanced)  Registers  a  new  device  in  this  DeviceMapping  under  the  indicated  name.  Any  existing  device
 	          *  with  this  name  in  this  DeviceMapping  is  removed.  The  new  device  is  also  added  to  the
 	          *  overall  collection  in  the  overall  map  itself.  Note  that  this  method  is  normally  called
@@ -164,9 +222,10 @@ public class HardwareMap implements Iterable<HardwareDevice> {
 	            internalPut(serialNumber,  deviceName,  device);
 	        }
 
+	        // DeviceMapping::internalPut
 	        protected  void  internalPut(SerialNumber  serialNumber,  String  deviceName,  DEVICE_TYPE  device)  {
 	            synchronized  (lock)  {
-	                // remove  whitespace  at  start  &  end
+	                // remove  whitespace  at   start  &  end
 	                deviceName  =  deviceName.trim();
 
 	                // Remove  any  existing  device  with  that  name
@@ -180,6 +239,7 @@ public class HardwareMap implements Iterable<HardwareDevice> {
 	            }
 	        }
 
+	        // DeviceMapping::putLocal
 	        public  void  putLocal(String  deviceName,  DEVICE_TYPE  device)  {
 	            synchronized  (lock)  {
 	                deviceName  =  deviceName.trim();
@@ -188,6 +248,7 @@ public class HardwareMap implements Iterable<HardwareDevice> {
 	        }
 
 	         /**
+	          * // DeviceMapping::contains
 	          *  Returns  whether  a  device  of  the  indicated  name  is  contained  within  this  mapping
 	          *  @param  deviceName  the  name  sought
 	          *  @return  whether  a  device  of  the  indicated  name  is  contained  within  this  mapping
@@ -200,6 +261,7 @@ public class HardwareMap implements Iterable<HardwareDevice> {
 	        }
 
 	         /**
+	          * // DeviceMapping::remove
 	          *  (Advanced)  Removes  the  device  with  the  indicated  name  (if  any)  from  this  DeviceMapping.  The  device
 	          *  is  also  removed  under  that  name  in  the  overall  map  itself.  Note  that  this  method  is  normally
 	          *  called  only  by  code  in  the  SDK  itself,  not  by  user  code.
@@ -213,6 +275,7 @@ public class HardwareMap implements Iterable<HardwareDevice> {
 	          }
 	          
 	         /**
+	          * // DeviceMapping::remove
 	          *  (Advanced)  Removes  the  device  with  the  indicated  name  (if  any)  from  this  DeviceMapping.  The  device
 	          *  is  also  removed  under  that  name  in  the  overall  map  itself.  Note  that  this  method  is  normally
 	          *  called  only  by  code  in  the  SDK  itself,  not  by  user  code.
@@ -222,6 +285,7 @@ public class HardwareMap implements Iterable<HardwareDevice> {
 	          *  @return                        whether  any  modifications  were  made  to  this  DeviceMapping
 	          *  @see  HardwareMap#remove
 	          */ 
+	          
 	          public  boolean  remove(SerialNumber  serialNumber,  String  deviceName)  {
 	            synchronized  (lock)  {
 	                deviceName  =  deviceName.trim();
@@ -235,6 +299,7 @@ public class HardwareMap implements Iterable<HardwareDevice> {
 	        }
 
 	         /**
+	          * // DeviceMapping::Iterator
 	          *  Returns  an  iterator  over  all  the  devices  in  this  DeviceMapping.
 	          *  @return  an  iterator  over  all  the  devices  in  this  DeviceMapping.
 	          */ 
@@ -245,6 +310,7 @@ public class HardwareMap implements Iterable<HardwareDevice> {
 	        }
 
 	         /**
+	          * // DeviceMapping::Set
 	          *  Returns  a  collection  of  all  the  (name,  device)  pairs  in  this  DeviceMapping.
 	          *  @return  a  collection  of  all  the  (name,  device)  pairs  in  this  DeviceMapping.
 	          */ 
@@ -252,9 +318,10 @@ public class HardwareMap implements Iterable<HardwareDevice> {
 	            synchronized  (lock)  {
 	                return  new  HashSet<>(map.entrySet());
 	            }
-	        }
+	        } // entrySet
 
 	         /**
+	          * // DeviceMapping::size
 	          *  Returns  the  number  of  devices  currently  in  this  DeviceMapping
 	          *  @return  the  number  of  devices  currently  in  this  DeviceMapping
 	          */ 
