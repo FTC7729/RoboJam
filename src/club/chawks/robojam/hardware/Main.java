@@ -22,55 +22,45 @@ public class Main {
 		// Create a servo controller
 		ServoController my_servoController = new ServoController();
 		my_hardwaremap.put("servocontroller", (HardwareDevice)my_servoController);
-		// TODO: Add servocontroller to allDeviceMappings
 		
-		// This is our first failed attempt to find out item
-		iIndex = my_hardwaremap.allDeviceMappings.indexOf(club.chawks.robojam.hardware.ServoController.class);
-		
-		// This is our second failed attempt to find out item
-		iIndex = my_hardwaremap.allDeviceMappings.lastIndexOf(club.chawks.robojam.hardware.ServoController.class);
-//		for (int x = 0;x < my_hardwaremap.allDeviceMappings.size(); x++){
-//			DeviceMapping<? extends HardwareDevice> curhardwaredev = my_hardwaremap.allDeviceMappings.get(x);
-//			if (curhardwaredev.getClass().equals(club.chawks.robojam.hardware.ServoController.class)){
-//				curhardwaredev.put("servocontroller", my_servoController);
-//			
-//		}
-			
-			
-		// TODO: try whileloop iterator<String> expiterator = exp.iterator();
-			
-		//	TODO: while(expiterator.hasNext()){
-		
-//		DeviceMapping<? extends HardwareDevice> iterator = my_hardwaremap.allDeviceMappings.get(0);
+		//
+		// Add servocontroller to allDeviceMappings
 		Iterator<DeviceMapping <? extends HardwareDevice>> iterator = my_hardwaremap.allDeviceMappings.iterator();
-		int loop = 0;
+		int iLoop = 0;
 		while (iterator.hasNext()){
 			DeviceMapping <? extends HardwareDevice> curDevice = iterator.next();
 			if (curDevice.getDeviceTypeClass() == club.chawks.robojam.hardware.ServoController.class) {
 				System.out.println(" ## Found servoController");
-// 				curDevice.put("servocontroller", my_servoController);
+				DeviceMapping<ServoController> curServoController = (DeviceMapping<ServoController>)curDevice;
+ 				curServoController.put("servocontroller", my_servoController);
 			}
 			
-			System.out.println(" ## Loop: " + loop);
-			loop++;
+			System.out.println(" ## Loop: " + iLoop);
+			iLoop++;
 		}
-		// TODO: System.out.println(expiterator.next());   }
-		
-		boolean inFactContains = my_hardwaremap.allDeviceMappings.contains(club.chawks.robojam.hardware.CRServo.class);
-		
-		
+			
 		// 
 		// Create servos
 		CRServo my_servoLeft = new CRServo(my_servoController, PCA9685Pin.PWM_09);
 		CRServo my_servoRight = new CRServo(my_servoController, PCA9685Pin.PWM_08);
 		
-		my_hardwaremap.put("leftWheel", (HardwareDevice)my_servoLeft);
-		iIndex = my_hardwaremap.allDeviceMappings.indexOf(club.chawks.robojam.hardware.CRServo.class);
-		HardwareMap.DeviceMapping<CRServo> my_mapCRServos = (HardwareMap.DeviceMapping<CRServo>)my_hardwaremap.allDeviceMappings.get(iIndex);
-		my_mapCRServos.put("leftWheel", my_servoLeft);
-		
+		my_hardwaremap.put("leftWheel", (HardwareDevice)my_servoLeft);		
 		my_hardwaremap.put("rightWheel",  (HardwareDevice)my_servoRight);
-		my_mapCRServos.put("rightWheel",  my_servoRight);
+	
+		iterator = my_hardwaremap.allDeviceMappings.iterator();
+		iLoop = 0;
+		while (iterator.hasNext()){
+			DeviceMapping <? extends HardwareDevice> curDevice = iterator.next();
+			if (curDevice.getDeviceTypeClass() == club.chawks.robojam.hardware.CRServo.class) {
+				System.out.println(" ## Found CRServo");
+				DeviceMapping<CRServo> curCRServo = (DeviceMapping<CRServo>)curDevice;
+ 				curCRServo.put("leftWheel", my_servoLeft);
+ 				curCRServo.put("rightWheel", my_servoRight);
+			}
+			
+			System.out.println(" ## Loop: " + iLoop);
+			iLoop++;
+		}
 		
 		// 
 		// Create OpMode

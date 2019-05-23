@@ -18,13 +18,13 @@ public class RoboJamOpMode extends OpMode {
 	public void init(HardwareMap hardwareMap) {
 
 		// TODO Auto-generated method stub
-		//this.m_servoPort = hardwareMap.crservo.get("leftWheel");
+		this.m_servoPort = hardwareMap.crservo.get("leftWheel");
 		this.m_servoStarboard = hardwareMap.crservo.get("rightWheel");
 		System.out.println(" ## m_servoPort" + m_servoPort);
-		/*m_servoPort.setDirection(CRServo.Direction.FORWARD);
+		m_servoPort.setDirection(CRServo.Direction.FORWARD);
 		m_servoPort.setPower(.5);
 		m_servoStarboard.setDirection(CRServo.Direction.FORWARD);
-		m_servoStarboard.setPower(0.5);*/
+		m_servoStarboard.setPower(0.5);
 		m_bInitialized = true;
 	}
 
