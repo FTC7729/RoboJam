@@ -13,7 +13,7 @@ import com.pi4j.io.i2c.I2CFactory;
 import com.pi4j.io.i2c.I2CFactory.UnsupportedBusNumberException;
 
 class ServoController extends HardwareDevice {
-	private boolean m_bDebug = true;
+	public boolean m_bDebug = true;
 	private int PCA9685_ADDRESS = 0x40;
 	private GpioController m_gpio;
 	protected PCA9685GpioProvider m_gpioProvider; 
@@ -21,19 +21,21 @@ class ServoController extends HardwareDevice {
   public ServoController () {
 	  init(PCA9685_ADDRESS);
 	  
-	  System.out.println("servoController did its thing");
-  }// ServoController
+	  if ( m_bDebug )
+		  System.out.println(" ## servoController did its thing");
+  } // ServoController
   
   public ServoController (int iAddress) {
 	  
 	  init(iAddress);
 	  
-	  
-  }
+  } // ServoController(iAddress)
   
   public boolean init (int iAddress) {
 	  
-	  System.out.println("servoController, one perametr version, did its thing");
+	  if ( m_bDebug )
+		  System.out.println(" ## servoController, one perametr version, did its thing");
+	  
 	  try {
 			this.m_gpioProvider = this.createProvider();
 			
@@ -67,7 +69,6 @@ class ServoController extends HardwareDevice {
   private PCA9685GpioProvider createProvider() throws UnsupportedBusNumberException, IOException
   {
 	  
-	  System.out.println("Is this working??????????");
       if ( m_bDebug ) 
           System.out.println(" ++ createProvider");
       

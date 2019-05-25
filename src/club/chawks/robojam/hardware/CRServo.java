@@ -1,18 +1,11 @@
 package club.chawks.robojam.hardware;
-import com.pi4j.gpio.extension.pca.PCA9685GpioProvider;
-import com.pi4j.gpio.extension.pca.PCA9685Pin;
-import com.pi4j.io.gpio.GpioController;
+
 import com.pi4j.io.gpio.Pin;
-
-
 
 class CRServo extends DcMotorSimple
 {
 	
-	private boolean m_bDebug = true;
-	private static int PCA9685_ADDRESS = 0x40;
-	private GpioController m_gpio;
-	private PCA9685GpioProvider m_gpioProvider;
+	public boolean m_bDebug = true;
 	
 	private ServoController m_scParent;
 	private Pin m_Pin;
@@ -66,10 +59,9 @@ class CRServo extends DcMotorSimple
 		
 		m_scParent.m_gpioProvider.setPwm(m_Pin, (int)m_dPower); 
 		
-		System.out.println("yay, past the power ");
-		
-		//m_gpioProvider.setPwm(PCA9685Pin.m_Pin, (int)m_dPower);
-		// m_gpioProvider.setPwm("PCA....PWM_" + m_Pin, (int)m_dPower);
+		if ( m_bDebug )
+			System.out.println(" ## yay, past the power ");
+
 	}
 	
     ServoController getController() {

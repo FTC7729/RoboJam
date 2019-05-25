@@ -4,27 +4,21 @@ import com.pi4j.gpio.extension.pca.PCA9685Pin;
 
 public class RoboJamOpMode extends OpMode {
 
-	private CRServo m_servoPort;
-	private CRServo m_servoStarboard;
+	private CRServo m_servoLeft;
+	private CRServo m_servoRight;
 	private boolean m_bInitialized;
-	private ServoController m_scParent;
 
 	public void init() {
 		m_bInitialized = false;
-
-		
 	}
 
 	public void init(HardwareMap hardwareMap) {
 
 		// TODO Auto-generated method stub
-		this.m_servoPort = hardwareMap.crservo.get("leftWheel");
-		this.m_servoStarboard = hardwareMap.crservo.get("rightWheel");
-		System.out.println(" ## m_servoPort" + m_servoPort);
-		m_servoPort.setDirection(CRServo.Direction.FORWARD);
-		m_servoPort.setPower(.5);
-		m_servoStarboard.setDirection(CRServo.Direction.FORWARD);
-		m_servoStarboard.setPower(0.5);
+		this.m_servoLeft = hardwareMap.crservo.get("leftWheel");
+		this.m_servoRight = hardwareMap.crservo.get("rightWheel");
+		m_servoLeft.setDirection(CRServo.Direction.FORWARD);
+		m_servoRight.setDirection(CRServo.Direction.FORWARD);
 		m_bInitialized = true;
 	}
 
@@ -36,19 +30,11 @@ public class RoboJamOpMode extends OpMode {
 			return;
 		}
 		
-		m_servoPort.setPower(1);
-		/*for (double i = 0.1; i <= 1.5; i += 0.01)
-		{
-			m_servoPort.setPower(i);
-			System.out.println(i);
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}*/
-
+		//String state = "start";
+		//switch state
+		
+		m_servoLeft.setPower(1);
+		
 	}
 
 }
